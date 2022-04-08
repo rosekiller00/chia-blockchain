@@ -40,6 +40,8 @@ def get_hints_and_subscription_coin_ids(
                     addition_coin_name = addition_coin.name()
                     add_if_coin_subscription(addition_coin_name)
                     add_if_ph_subscription(addition_coin.puzzle_hash, addition_coin_name)
+                    if hint is None:
+                        continue
                     if len(hint) == 32:
                         add_if_ph_subscription(bytes32(hint), addition_coin_name)
 

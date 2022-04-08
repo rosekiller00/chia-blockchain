@@ -5,7 +5,7 @@ from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.full_block import FullBlock
 from chia.types.header_block import HeaderBlock
-from chia.types.spend_bundle_conditions import SpendBundleConditions
+from chia_rs import PySpendBundleConditions
 from chia.consensus.cost_calculator import NPCResult
 from chia.util.ints import uint64
 
@@ -51,7 +51,7 @@ def additions_for_npc(npc_result: NPCResult) -> List[Coin]:
     return additions
 
 
-def tx_removals_and_additions(results: Optional[SpendBundleConditions]) -> Tuple[List[bytes32], List[Coin]]:
+def tx_removals_and_additions(results: Optional[PySpendBundleConditions]) -> Tuple[List[bytes32], List[Coin]]:
     """
     Doesn't return farmer and pool reward.
     """

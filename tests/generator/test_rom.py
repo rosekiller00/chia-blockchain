@@ -9,7 +9,7 @@ from chia.types.generator_types import BlockGenerator
 from chia.util.ints import uint32
 from chia.wallet.puzzles.load_clvm import load_clvm
 from chia.consensus.condition_costs import ConditionCost
-from chia.types.spend_bundle_conditions import Spend
+from chia_rs import PySpend
 
 MAX_COST = int(1e15)
 COST_PER_BYTE = int(12000)
@@ -107,12 +107,12 @@ class TestROM:
             len(bytes(gen.program)) * COST_PER_BYTE
         )
 
-        spend = Spend(
+        spend = PySpend(
             coin_id=bytes32.fromhex("e8538c2d14f2a7defae65c5c97f5d4fae7ee64acef7fec9d28ad847a0880fd03"),
             puzzle_hash=bytes32.fromhex("9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"),
             height_relative=None,
             seconds_relative=0,
-            create_coin=[(bytes([0] * 31 + [1]), 500, b"")],
+            create_coin=[(bytes([0] * 31 + [1]), 500, None)],
             agg_sig_me=[],
         )
 

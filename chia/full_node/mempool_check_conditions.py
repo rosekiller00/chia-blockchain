@@ -4,7 +4,7 @@ from chia_rs import MEMPOOL_MODE, COND_CANON_INTS, NO_NEG_DIV
 
 from chia.consensus.default_constants import DEFAULT_CONSTANTS
 from chia.consensus.cost_calculator import NPCResult
-from chia.types.spend_bundle_conditions import SpendBundleConditions
+from chia_rs import PySpendBundleConditions
 from chia.full_node.generator import create_generator_args, setup_generator_args
 from chia.types.coin_record import CoinRecord
 from chia.types.generator_types import BlockGenerator
@@ -80,7 +80,7 @@ def get_puzzle_and_solution_for_coin(generator: BlockGenerator, coin_name: bytes
 
 def mempool_check_time_locks(
     removal_coin_records: Dict[bytes32, CoinRecord],
-    bundle_conds: SpendBundleConditions,
+    bundle_conds: PySpendBundleConditions,
     prev_transaction_block_height: uint32,
     timestamp: uint64,
 ) -> Optional[Err]:

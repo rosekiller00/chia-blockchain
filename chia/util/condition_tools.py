@@ -9,7 +9,7 @@ from chia.types.condition_opcodes import ConditionOpcode
 from chia.types.condition_with_args import ConditionWithArgs
 from chia.util.errors import ConsensusError, Err
 from chia.util.ints import uint64
-from chia.types.spend_bundle_conditions import SpendBundleConditions
+from chia_rs import PySpendBundleConditions
 
 # TODO: review each `assert` and consider replacing with explicit checks
 #       since asserts can be stripped with python `-OO` flag
@@ -64,7 +64,7 @@ def conditions_by_opcode(
     return d
 
 
-def pkm_pairs(conditions: SpendBundleConditions, additional_data: bytes) -> Tuple[List[bytes48], List[bytes]]:
+def pkm_pairs(conditions: PySpendBundleConditions, additional_data: bytes) -> Tuple[List[bytes48], List[bytes]]:
     ret: Tuple[List[bytes48], List[bytes]] = ([], [])
 
     for pk, msg in conditions.agg_sig_unsafe:

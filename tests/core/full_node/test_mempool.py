@@ -45,7 +45,7 @@ from chia.types.blockchain_format.program import SerializedProgram
 from clvm_tools import binutils
 from chia.types.generator_types import BlockGenerator
 from blspy import G1Element
-from chia.types.spend_bundle_conditions import SpendBundleConditions, Spend
+from chia_rs import PySpendBundleConditions, PySpend
 
 from tests.wallet_tools import WalletTool
 
@@ -1926,7 +1926,7 @@ class TestGeneratorConditions:
         npc_result = generator_condition_tester(
             " ".join([f"({opcode.value[0]} {i})" for i in range(50, 101)]), height=softfork_height
         )
-        print(npc_result)
+        # print(npc_result)
         assert npc_result.error is None
         assert len(npc_result.conds.spends) == 1
 
@@ -1971,7 +1971,7 @@ class TestGeneratorConditions:
         # in this test we just assert announcements, we never make them, so
         # these should fail
         npc_result = generator_condition_tester(f'({opcode.value[0]} "{message}") ', height=softfork_height)
-        print(npc_result)
+        # print(npc_result)
         assert npc_result.error == Err.ASSERT_ANNOUNCE_CONSUMED_FAILED.value
 
     def test_multiple_reserve_fee(self, softfork_height):
@@ -2056,7 +2056,7 @@ class TestGeneratorConditions:
         assert npc_result.error is None
         assert len(npc_result.conds.spends) == 2
         for s in npc_result.conds.spends:
-            assert s.create_coin == [(puzzle_hash.encode("ascii"), 10, b"")]
+            assert s.create_coin == [(puzzle_hash.encode("ascii"), 10, None)]
 
     def test_create_coin_different_puzzhash(self, softfork_height):
         # CREATE_COIN
@@ -2068,8 +2068,8 @@ class TestGeneratorConditions:
         )
         assert npc_result.error is None
         assert len(npc_result.conds.spends) == 1
-        assert (puzzle_hash_1.encode("ascii"), 5, b"") in npc_result.conds.spends[0].create_coin
-        assert (puzzle_hash_2.encode("ascii"), 5, b"") in npc_result.conds.spends[0].create_coin
+        assert (puzzle_hash_1.encode("ascii"), 5, None) in npc_result.conds.spends[0].create_coin
+        assert (puzzle_hash_2.encode("ascii"), 5, None) in npc_result.conds.spends[0].create_coin
 
     def test_create_coin_different_amounts(self, softfork_height):
         # CREATE_COIN
@@ -2081,8 +2081,8 @@ class TestGeneratorConditions:
         assert npc_result.error is None
         assert len(npc_result.conds.spends) == 1
         coins = npc_result.conds.spends[0].create_coin
-        assert (puzzle_hash.encode("ascii"), 5, b"") in coins
-        assert (puzzle_hash.encode("ascii"), 4, b"") in coins
+        assert (puzzle_hash.encode("ascii"), 5, None) in coins
+        assert (puzzle_hash.encode("ascii"), 4, None) in coins
 
     def test_create_coin_with_hint(self, softfork_height):
         # CREATE_COIN
@@ -2105,7 +2105,7 @@ class TestGeneratorConditions:
     def test_unknown_condition(self, mempool: bool, height: uint32):
         for c in ['(1 100 "foo" "bar")', "(100)", "(1 1) (2 2) (3 3)", '("foobar")']:
             npc_result = generator_condition_tester(c, mempool_mode=mempool, height=height)
-            print(npc_result)
+            # print(npc_result)
             if mempool:
                 assert npc_result.error == Err.INVALID_CONDITION.value
             else:
@@ -2501,37 +2501,37 @@ class TestPkmPairs:
     ASU = ConditionOpcode.AGG_SIG_UNSAFE
 
     def test_empty_list(self):
-        conds = SpendBundleConditions([], 0, 0, 0, [], 0)
+        conds = PySpendBundleConditions([], 0, 0, 0, [], 0)
         pks, msgs = pkm_pairs(conds, b"foobar")
         assert pks == []
         assert msgs == []
 
     def test_no_agg_sigs(self):
         # one create coin: h1 amount: 1 and not hint
-        spends = [Spend(self.h3, self.h4, None, 0, [(self.h1, 1, b"")], [])]
-        conds = SpendBundleConditions(spends, 0, 0, 0, [], 0)
+        spends = [PySpend(self.h3, self.h4, None, 0, [(self.h1, 1, b"")], [])]
+        conds = PySpendBundleConditions(spends, 0, 0, 0, [], 0)
         pks, msgs = pkm_pairs(conds, b"foobar")
         assert pks == []
         assert msgs == []
 
     def test_agg_sig_me(self):
 
-        spends = [Spend(self.h1, self.h2, None, 0, [], [(bytes48(self.pk1), b"msg1"), (bytes48(self.pk2), b"msg2")])]
-        conds = SpendBundleConditions(spends, 0, 0, 0, [], 0)
+        spends = [PySpend(self.h1, self.h2, None, 0, [], [(bytes48(self.pk1), b"msg1"), (bytes48(self.pk2), b"msg2")])]
+        conds = PySpendBundleConditions(spends, 0, 0, 0, [], 0)
         pks, msgs = pkm_pairs(conds, b"foobar")
         assert [bytes(pk) for pk in pks] == [bytes(self.pk1), bytes(self.pk2)]
         assert msgs == [b"msg1" + self.h1 + b"foobar", b"msg2" + self.h1 + b"foobar"]
 
     def test_agg_sig_unsafe(self):
-        conds = SpendBundleConditions([], 0, 0, 0, [(bytes48(self.pk1), b"msg1"), (bytes48(self.pk2), b"msg2")], 0)
+        conds = PySpendBundleConditions([], 0, 0, 0, [(bytes48(self.pk1), b"msg1"), (bytes48(self.pk2), b"msg2")], 0)
         pks, msgs = pkm_pairs(conds, b"foobar")
         assert [bytes(pk) for pk in pks] == [bytes(self.pk1), bytes(self.pk2)]
         assert msgs == [b"msg1", b"msg2"]
 
     def test_agg_sig_mixed(self):
 
-        spends = [Spend(self.h1, self.h2, None, 0, [], [(bytes48(self.pk1), b"msg1")])]
-        conds = SpendBundleConditions(spends, 0, 0, 0, [(bytes48(self.pk2), b"msg2")], 0)
+        spends = [PySpend(self.h1, self.h2, None, 0, [], [(bytes48(self.pk1), b"msg1")])]
+        conds = PySpendBundleConditions(spends, 0, 0, 0, [(bytes48(self.pk2), b"msg2")], 0)
         pks, msgs = pkm_pairs(conds, b"foobar")
         assert [bytes(pk) for pk in pks] == [bytes(self.pk2), bytes(self.pk1)]
         assert msgs == [b"msg2", b"msg1" + self.h1 + b"foobar"]
